@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Amethyst Dev — Something is Being Conjured</title>
+<meta name="description" content="Amethyst Dev. Code conjured from the void. Services soon to be revealed." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💜</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Manrope:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#07040c;
+    --void-2:#0d0817;
+    --void-3:#140b22;
+    --amethyst:#9d5cff;
+    --amethyst-bright:#c9a3ff;
+    --amethyst-deep:#5a1fb0;
+    --amethyst-glow:rgba(157,92,255,0.45);
+    --blood:#ff2e63;
+    --ink:#e9e1f7;
+    --ink-dim:#8b7fa8;
+    --ink-faint:#564a70;
+    --border:rgba(157,92,255,0.18);
+    --font-display:'Cinzel', Georgia, 'Times New Roman', serif;
+    --font-body:'Manrope', -apple-system, Helvetica, Arial, sans-serif;
+    --font-mono:'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--void);
+    color:var(--ink);
+    font-family:var(--font-body);
+    overflow-x:hidden;
+    position:relative;
+    min-height:100vh;
+  }
+
+  /* ---------- ATMOSPHERE LAYERS ---------- */
+  #fog-canvas{
+    position:fixed; inset:0; width:100%; height:100%;
+    z-index:0; pointer-events:none;
+  }
+
+  .grain{
+    position:fixed; inset:-100px; z-index:1; pointer-events:none;
+    opacity:0.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain-shift 8s steps(4) infinite;
+  }
+  @keyframes grain-shift{
+    0%,100%{transform:translate(0,0);}
+    25%{transform:translate(-2%,2%);}
+    50%{transform:translate(2%,-1%);}
+    75%{transform:translate(-1%,-2%);}
+  }
+
+  .scanlines{
+    position:fixed; inset:0; z-index:2; pointer-events:none; opacity:0.35;
+    background:repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(157,92,255,0.025) 3px,
+      transparent 4px
+    );
+  }
+
+  .vignette{
+    position:fixed; inset:0; z-index:2; pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 40%, rgba(3,1,7,0.85) 100%);
+  }
+
+  .cursor-glow{
+    position:fixed; width:500px; height:500px; z-index:1; pointer-events:none;
+    border-radius:50%;
+    background:radial-gradient(circle, var(--amethyst-glow) 0%, transparent 65%);
+    transform:translate(-50%,-50%);
+    filter:blur(10px);
+    transition:opacity 0.4s ease;
+    opacity:0;
+  }
+
+  main{position:relative; z-index:3;}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:28px clamp(20px,5vw,64px);
+    backdrop-filter:blur(6px);
+    background:linear-gradient(to bottom, rgba(7,4,12,0.7), transparent);
+  }
+  .logo-mark{
+    font-family:var(--font-display); font-weight:700; font-size:1rem;
+    letter-spacing:0.28em; color:var(--ink);
+    display:flex; align-items:center; gap:10px;
+    text-transform:uppercase;
+  }
+  .logo-mark::before{
+    content:'◆'; color:var(--amethyst); font-size:0.7em;
+    animation:pulse-glyph 3s ease-in-out infinite;
+  }
+  @keyframes pulse-glyph{
+    0%,100%{opacity:0.5; text-shadow:0 0 4px var(--amethyst);}
+    50%{opacity:1; text-shadow:0 0 16px var(--amethyst), 0 0 30px var(--amethyst-deep);}
+  }
+  .nav-status{
+    font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.15em;
+    color:var(--ink-faint); text-transform:uppercase;
+    display:flex; align-items:center; gap:8px;
+  }
+  .status-dot{
+    width:6px; height:6px; border-radius:50%; background:var(--blood);
+    box-shadow:0 0 8px var(--blood);
+    animation:blink-dot 1.8s ease-in-out infinite;
+  }
+  @keyframes blink-dot{0%,100%{opacity:1;}50%{opacity:0.15;}}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:100svh; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    padding:120px 24px 80px; position:relative;
+  }
+  .eyebrow{
+    font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.35em;
+    color:var(--ink-dim); text-transform:uppercase; margin-bottom:28px;
+    opacity:0; animation:reveal-up 1s ease forwards 0.2s;
+  }
+  .eyebrow span{color:var(--amethyst);}
+
+  .glitch-title{
+    font-family:var(--font-display); font-weight:900;
+    font-size:clamp(2.6rem, 9vw, 7.5rem);
+    letter-spacing:0.03em; line-height:1;
+    color:var(--ink);
+    position:relative;
+    text-transform:uppercase;
+    opacity:0; animation:reveal-up 1.1s ease forwards 0.4s;
+  }
+  .glitch-title span{
+    position:relative; display:inline-block;
+  }
+  .glitch-title span::before,
+  .glitch-title span::after{
+    content:attr(data-text);
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    background:var(--void); overflow:hidden;
+  }
+  .glitch-title span::before{
+    left:2px; text-shadow:-2px 0 var(--blood);
+    animation:glitch-1 4.5s infinite linear alternate-reverse;
+  }
+  .glitch-title span::after{
+    left:-2px; text-shadow:2px 0 var(--amethyst-bright), -2px 0 var(--amethyst-deep);
+    animation:glitch-2 3.8s infinite linear alternate-reverse;
+  }
+  @keyframes glitch-1{
+    0%{clip-path:inset(20% 0 60% 0);} 10%{clip-path:inset(80% 0 2% 0);}
+    20%{clip-path:inset(40% 0 40% 0);} 30%{clip-path:inset(10% 0 75% 0);}
+    40%{clip-path:inset(60% 0 15% 0);} 50%{clip-path:inset(5% 0 85% 0);}
+    60%{clip-path:inset(70% 0 5% 0);} 70%{clip-path:inset(30% 0 50% 0);}
+    80%{clip-path:inset(90% 0 1% 0);} 90%{clip-path:inset(15% 0 65% 0);}
+    100%{clip-path:inset(50% 0 30% 0);}
+  }
+  @keyframes glitch-2{
+    0%{clip-path:inset(65% 0 10% 0);} 15%{clip-path:inset(10% 0 70% 0);}
+    30%{clip-path:inset(45% 0 35% 0);} 45%{clip-path:inset(85% 0 5% 0);}
+    60%{clip-path:inset(20% 0 55% 0);} 75%{clip-path:inset(5% 0 88% 0);}
+    90%{clip-path:inset(55% 0 20% 0);} 100%{clip-path:inset(30% 0 45% 0);}
+  }
+
+  .glitch-title.flicker-idle{
+    animation:reveal-up 1.1s ease forwards 0.4s, title-flicker 7s ease-in-out infinite 2s;
+  }
+  @keyframes title-flicker{
+    0%,4%,8%,100%{opacity:1;}
+    5%{opacity:0.3;}
+    6%{opacity:1;}
+    7%{opacity:0.5;}
+  }
+
+  .tagline{
+    font-family:var(--font-body); font-weight:300; font-size:clamp(1rem,2vw,1.3rem);
+    color:var(--ink-dim); max-width:620px; margin:32px auto 0; line-height:1.7;
+    opacity:0; animation:reveal-up 1s ease forwards 0.7s;
+  }
+  .tagline em{color:var(--amethyst-bright); font-style:normal;}
+
+  .scroll-cue{
+    margin-top:64px; font-family:var(--font-mono); font-size:0.68rem;
+    letter-spacing:0.3em; color:var(--ink-faint); text-transform:uppercase;
+    opacity:0; animation:reveal-up 1s ease forwards 1s, drift-down 2.4s ease-in-out infinite 1.5s;
+  }
+  @keyframes reveal-up{
+    from{opacity:0; transform:translateY(24px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  @keyframes drift-down{
+    0%,100%{transform:translateY(0); opacity:0.5;}
+    50%{transform:translateY(8px); opacity:1;}
+  }
+
+  /* ---------- SECTION SHARED ---------- */
+  section{
+    padding:140px clamp(24px,6vw,80px);
+    position:relative; max-width:1200px; margin:0 auto;
+  }
+  .section-head{
+    text-align:center; margin-bottom:72px;
+  }
+  .section-eyebrow{
+    font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.3em;
+    color:var(--amethyst); text-transform:uppercase; margin-bottom:16px;
+    display:block;
+  }
+  .section-title{
+    font-family:var(--font-display); font-weight:700;
+    font-size:clamp(1.9rem,4vw,3rem); color:var(--ink);
+    text-transform:uppercase; letter-spacing:0.02em;
+  }
+  .reveal{
+    opacity:0; transform:translateY(30px);
+    transition:opacity 0.9s ease, transform 0.9s ease;
+  }
+  .reveal.in-view{opacity:1; transform:translateY(0);}
+
+  /* ---------- ABOUT ---------- */
+  .about-body{
+    max-width:720px; margin:0 auto; text-align:center;
+    font-size:1.1rem; line-height:1.9; color:var(--ink-dim); font-weight:300;
+  }
+  .about-body strong{color:var(--ink); font-weight:500;}
+
+  .pillars{
+    display:grid; grid-template-columns:1fr; gap:1px;
+    margin-top:80px; background:var(--border);
+    border:1px solid var(--border);
+  }
+  @media(min-width:768px){ .pillars{grid-template-columns:repeat(3,1fr);} }
+  .pillar{
+    background:var(--void); padding:44px 32px; text-align:center;
+    transition:background 0.4s ease;
+  }
+  .pillar:hover{background:var(--void-3);}
+  .pillar-glyph{
+    font-size:1.6rem; color:var(--amethyst); margin-bottom:18px;
+    text-shadow:0 0 20px var(--amethyst-glow);
+  }
+  .pillar h3{
+    font-family:var(--font-display); font-size:1.05rem; letter-spacing:0.1em;
+    text-transform:uppercase; margin-bottom:12px; color:var(--ink);
+  }
+  .pillar p{
+    font-size:0.92rem; color:var(--ink-dim); line-height:1.7; font-weight:300;
+  }
+
+  /* ---------- SERVICES (LOCKED) ---------- */
+  .services-grid{
+    display:grid; grid-template-columns:1fr; gap:20px;
+  }
+  @media(min-width:640px){ .services-grid{grid-template-columns:repeat(2,1fr);} }
+  @media(min-width:1024px){ .services-grid{grid-template-columns:repeat(4,1fr);} }
+
+  .locked-card{
+    position:relative; border:1px solid var(--border);
+    background:linear-gradient(160deg, var(--void-2), var(--void));
+    padding:40px 24px 32px; text-align:center; overflow:hidden;
+    min-height:220px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:16px;
+    transition:transform 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+  }
+  .locked-card::before{
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 0%, var(--amethyst-glow), transparent 60%);
+    opacity:0; transition:opacity 0.5s ease;
+  }
+  .locked-card:hover{
+    transform:translateY(-6px);
+    border-color:var(--amethyst);
+    box-shadow:0 20px 50px -20px var(--amethyst-glow);
+  }
+  .locked-card:hover::before{opacity:0.5;}
+  .lock-glyph{
+    font-size:1.8rem; color:var(--ink-faint); position:relative; z-index:1;
+    transition:color 0.5s ease, text-shadow 0.5s ease;
+  }
+  .locked-card:hover .lock-glyph{
+    color:var(--amethyst-bright);
+    text-shadow:0 0 18px var(--amethyst);
+  }
+  .locked-title{
+    font-family:var(--font-mono); font-size:0.8rem; letter-spacing:0.15em;
+    color:var(--ink-faint); text-transform:uppercase; position:relative; z-index:1;
+    filter:blur(3px); user-select:none;
+    transition:filter 0.5s ease, color 0.5s ease;
+  }
+  .locked-card:hover .locked-title{filter:blur(0.5px); color:var(--ink-dim);}
+  .locked-tag{
+    font-family:var(--font-mono); font-size:0.62rem; letter-spacing:0.2em;
+    color:var(--blood); text-transform:uppercase; position:relative; z-index:1;
+  }
+  .locked-tag .dots::after{
+    content:''; display:inline-block; width:1em; text-align:left;
+    animation:dots 1.6s steps(4,end) infinite;
+  }
+  @keyframes dots{0%,20%{content:'';}40%{content:'.';}60%{content:'..';}80%,100%{content:'...';}}
+
+  .services-note{
+    text-align:center; margin-top:56px; font-family:var(--font-mono);
+    font-size:0.72rem; letter-spacing:0.15em; color:var(--ink-faint);
+    text-transform:uppercase;
+  }
+
+  /* ---------- CONTACT ---------- */
+  .contact-wrap{text-align:center;}
+  .contact-body{
+    max-width:560px; margin:0 auto 40px; color:var(--ink-dim);
+    font-weight:300; line-height:1.8; font-size:1.05rem;
+  }
+  .contact-email{
+    display:inline-block; font-family:var(--font-display); font-weight:700;
+    font-size:clamp(1.3rem,3.5vw,2rem); color:var(--ink);
+    text-decoration:none; letter-spacing:0.02em;
+    padding:18px 40px; border:1px solid var(--border);
+    position:relative; transition:all 0.4s ease;
+  }
+  .contact-email::before{
+    content:''; position:absolute; inset:0;
+    background:var(--amethyst); opacity:0; transition:opacity 0.4s ease;
+    z-index:-1;
+  }
+  .contact-email:hover{
+    color:var(--void); border-color:var(--amethyst);
+    text-shadow:none;
+    box-shadow:0 0 40px var(--amethyst-glow);
+  }
+  .contact-email:hover::before{opacity:1;}
+
+  footer{
+    text-align:center; padding:48px 24px 40px;
+    font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.1em;
+    color:var(--ink-faint); text-transform:uppercase; position:relative; z-index:3;
+    border-top:1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<canvas id="fog-canvas"></canvas>
+<div class="grain"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<nav>
+  <div class="logo-mark">Amethyst Dev</div>
+  <div class="nav-status"><span class="status-dot"></span> Signal Active</div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="eyebrow">// A studio operating <span>after dark</span></div>
+    <h1 class="glitch-title flicker-idle"><span data-text="AMETHYST DEV">AMETHYST DEV</span></h1>
+    <p class="tagline">Code conjured from the void. We build the interfaces that linger in the mind long after <em>the screen goes dark.</em></p>
+    <div class="scroll-cue">descend ↓</div>
+  </section>
+
+  <section id="about">
+    <div class="section-head reveal">
+      <span class="section-eyebrow">// Origin</span>
+      <h2 class="section-title">Not a Studio. A Ritual.</h2>
+    </div>
+    <p class="about-body reveal">
+      Amethyst Dev exists in the space between concept and creation — a small circle
+      of engineers and designers who prefer to work where most won't look. We don't chase
+      trends. We <strong>summon</strong> the product your competitors will spend years
+      trying to reverse-engineer.
+    </p>
+    <div class="pillars reveal">
+      <div class="pillar">
+        <div class="pillar-glyph">◆</div>
+        <h3>Design</h3>
+        <p>Interfaces shaped in shadow, refined until every pixel earns its place.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-glyph">◆</div>
+        <h3>Development</h3>
+        <p>Code written with obsessive precision — fast, quiet, and built to last.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-glyph">◆</div>
+        <h3>Deployment</h3>
+        <p>We don't launch products. We release them into the world, fully formed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="section-head reveal">
+      <span class="section-eyebrow">// Offerings</span>
+      <h2 class="section-title">Services</h2>
+    </div>
+    <div class="services-grid reveal">
+      <div class="locked-card">
+        <div class="lock-glyph">🔒</div>
+        <div class="locked-title">████ ██████</div>
+        <div class="locked-tag">Sealed <span class="dots"></span></div>
+      </div>
+      <div class="locked-card">
+        <div class="lock-glyph">🔒</div>
+        <div class="locked-title">███████</div>
+        <div class="locked-tag">Encrypted <span class="dots"></span></div>
+      </div>
+      <div class="locked-card">
+        <div class="lock-glyph">🔒</div>
+        <div class="locked-title">████ ████</div>
+        <div class="locked-tag">Classified <span class="dots"></span></div>
+      </div>
+      <div class="locked-card">
+        <div class="lock-glyph">🔒</div>
+        <div class="locked-title">██████████</div>
+        <div class="locked-tag">Dormant <span class="dots"></span></div>
+      </div>
+    </div>
+    <p class="services-note reveal">Services soon to be revealed. Patience is part of the process.</p>
+  </section>
+
+  <section id="contact">
+    <div class="contact-wrap reveal">
+      <span class="section-eyebrow">// Reach Us</span>
+      <h2 class="section-title" style="margin-bottom:24px;">Summon Us</h2>
+      <p class="contact-body">
+        If you have something worth building, we're already listening.
+        Send word — we will find you.
+      </p>
+      <a class="contact-email" href="mailto:1amethystdev@gmail.com">1amethystdev@gmail.com</a>
+    </div>
+  </section>
+</main>
+
+<footer>© 2026 Amethyst Dev — All rights reserved in this realm and the next.</footer>
+
+<script>
+  // Cursor glow follow
+  const glow = document.getElementById('cursorGlow');
+  let glowVisible = false;
+  window.addEventListener('mousemove', (e) => {
+    glow.style.left = e.clientX + 'px';
+    glow.style.top = e.clientY + 'px';
+    if(!glowVisible){ glow.style.opacity = '1'; glowVisible = true; }
+  });
+  window.addEventListener('mouseleave', () => { glow.style.opacity = '0'; glowVisible = false; });
+
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+
+  // Ambient fog / ember particle canvas
+  const canvas = document.getElementById('fog-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, particles;
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function makeParticles(count){
+    const arr = [];
+    for(let i=0;i<count;i++){
+      arr.push({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        r: Math.random()*90 + 40,
+        vx: (Math.random()-0.5)*0.15,
+        vy: (Math.random()-0.5)*0.1 - 0.05,
+        alpha: Math.random()*0.05 + 0.02,
+        hue: Math.random() > 0.15 ? 265 : 340 // mostly amethyst, rare blood-red ember
+      });
+    }
+    return arr;
+  }
+  particles = makeParticles(22);
+
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    ctx.globalCompositeOperation = 'lighter';
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if(p.x < -150) p.x = w+150;
+      if(p.x > w+150) p.x = -150;
+      if(p.y < -150) p.y = h+150;
+      if(p.y > h+150) p.y = -150;
+
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      grad.addColorStop(0, `hsla(${p.hue}, 90%, 65%, ${p.alpha})`);
+      grad.addColorStop(1, 'hsla(0,0%,0%,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+</script>
+
+</body>
+</html>
